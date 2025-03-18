@@ -1,0 +1,6 @@
+﻿ollama
+streamlit
+embedchain
+pandas
+docx2txt
+streamlit-chat
