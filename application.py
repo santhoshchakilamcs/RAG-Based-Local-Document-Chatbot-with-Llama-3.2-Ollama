@@ -7,6 +7,7 @@ import base64
 import pandas as pd
 import docx2txt
 from streamlit_chat import message
+from citations import format_citation_text
 
 # Define the embedchain_bot function
 def embedchain_bot(db_path):
@@ -47,6 +48,8 @@ if 'app' not in st.session_state:
     st.session_state.app = embedchain_bot(db_path)
 if 'messages' not in st.session_state:
     st.session_state.messages = []
+if 'source_files' not in st.session_state:
+    st.session_state.source_files = []
 
 # Sidebar for file upload and preview
 with st.sidebar:
@@ -90,6 +93,7 @@ with st.sidebar:
                     # Remove temp file
                     os.remove(file_path)
 
+                st.session_state.source_files = [f.name for f in uploaded_files]
                 st.success(f"✅ Added {len(uploaded_files)} files to the knowledge base! Ready for queries.")
 
 # Chat interface
@@ -111,6 +115,13 @@ if prompt := st.chat_input("Ask a question about the documents"):
             # st.write(retrieved_docs)  # Show retrieved documents in the UI
 
             response = retrieved_docs  # Directly using `query()` output
+
+            # Source-citation line: file names only. The current
+            # embedchain query() call does not return per-chunk page
+            # or section numbers, so none are invented here.
+            citation = format_citation_text(st.session_state.get("source_files", []))
+            if citation:
+                response = f"{response}\n\n{citation}"
 
         st.session_state.messages.append({"role": "assistant", "content": response})
         message(response)
